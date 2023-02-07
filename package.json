@@ -1,0 +1,24 @@
+{
+  "name": "liveboard",
+  "version": "1.0.0",
+  "description": "A virtual whiteboard tailord for one-on-one tutoring",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --watch server server/index.js",
+    "start": "node server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MJayVen/liveboard.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MJayVen/liveboard/issues"
+  },
+  "homepage": "https://github.com/MJayVen/liveboard#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemon": "^2.0.20"
+  }
+}
