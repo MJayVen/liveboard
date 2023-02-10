@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import Board from '../components/Board.vue';
+
+import { ref, type Ref } from 'vue';
+
+let color = ref('#000000');
+
 </script>
 
 <template>
   <div class="board-container">
     <div class="color-picker-container">
-      <input type="color">
+      <input v-model="color" type="color">
     </div>
-    <Board />
+    <Board :color="color" />
   </div>
 </template>
 
@@ -16,19 +21,19 @@ import Board from '../components/Board.vue';
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow: hidden;
-  width: 80%;
-  height: 80%;
+  margin: 0 10px;
+  padding: 10px;
   border: 1px solid white;
+  border-radius: 10px;
   background-color: #0b1739;
 }
 
 .color-picker-container {
   padding: 1rem;
+  margin-bottom: 1rem;
   width: 80%;
+  border-bottom: 1px solid white;
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid white;
 }
 </style>
