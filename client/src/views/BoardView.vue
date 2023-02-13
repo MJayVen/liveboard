@@ -3,11 +3,16 @@ import Board from '../components/Board.vue';
 
 import { ref, type Ref } from 'vue';
 
-let color = ref('#000000');
+const brushColor = ref('#000000');
+const brushWidth = ref(7)
 const BoardRef = ref<InstanceType<typeof Board> | null>(null)
 
 function clear() {
   BoardRef.value?.clear();
+}
+
+function undo() {
+  BoardRef.value?.undo();
 }
 
 </script>
@@ -15,10 +20,16 @@ function clear() {
 <template>
   <div class="board-container">
     <div class="color-picker-container">
-      <input v-model="color" type="color">
-      <button @click="clear">Clear</button>
+      <input v-model="brushColor" type="color">
+      <div id="button-container">
+        <button @click="clear">Clear</button>
+        <button @click="undo">Undo</button>
+      </div>
+      <div id="slider-container">
+        <input type="range" min="3" max="11" v-model.number="brushWidth" class="slider" id="myRange">
+      </div>
     </div>
-    <Board :color="color" ref="BoardRef" />
+    <Board :brushColor="brushColor" :brushWidth="brushWidth" ref="BoardRef" />
   </div>
 </template>
 

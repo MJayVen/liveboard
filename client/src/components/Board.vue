@@ -3,11 +3,11 @@
 import { onMounted } from 'vue';
 
 const props = defineProps<{
-    color?: string;
+    brushColor?: string;
+    brushWidth?: number;
 }>();
 
 onMounted(() => {
-    // let elements = [] as Path2D[];
 
     let canvas = document.querySelector('#board') as HTMLCanvasElement;
     let ctx = canvas!.getContext('2d');
@@ -17,6 +17,8 @@ onMounted(() => {
         let sketch_style = getComputedStyle(sketch as Element);
         canvas.width = parseInt(sketch_style.getPropertyValue('width'));
         canvas.height = parseInt(sketch_style.getPropertyValue('height'));
+
+        ctx?.save();
 
         let mouse = { x: 0, y: 0 };
         let last_mouse = { x: 0, y: 0 };
@@ -32,12 +34,12 @@ onMounted(() => {
 
 
         /* Drawing on Paint App */
-        ctx!.lineWidth = 5;
         ctx!.lineJoin = 'round';
         ctx!.lineCap = 'round';
 
         canvas.addEventListener('mousedown', function (e) {
-            ctx!.strokeStyle = props.color!;
+            ctx!.lineWidth = props.brushWidth!;
+            ctx!.strokeStyle = props.brushColor!;
             canvas.addEventListener('mousemove', onPaint, false);
         }, false);
 
@@ -69,14 +71,19 @@ onMounted(() => {
     });
 });
 
-const clear = () => {
+function clear() {
     let canvas = document.querySelector('#board') as HTMLCanvasElement;
     let ctx = canvas!.getContext('2d');
     ctx!.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+function undo() {
+    console.log("undo")
+}
+
 defineExpose({
-    clear
+    clear,
+    undo
 });
 
 </script>
