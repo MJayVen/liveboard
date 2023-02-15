@@ -1,20 +1,23 @@
-const express = require("express");
-const app = express();
-
-const hostname = "127.0.0.1";
-const port = process.env.PORT || 3000;
-
-app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    next();
+const app = require("express")();
+const http = require("http").createServer(app);
+const io = require("socket.io")(http, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
 });
 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
+// when user connects via websockets
+io.on("connection", (socket) => {
+  console.log("a user connected");
+
+  // when server receives canvas data, broadcast it to all connected users
+  socket.on("canvas-data", (data) => {
+    socket.broadcast.emit("canvas-data", data);
+  });
 });
 
-app.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+const serverPort = process.env.MY_PORT || process.env.PORT || 3000;
+http.listen(serverPort, () => {
+  console.log(`Listening on port ${serverPort}`);
 });

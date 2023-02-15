@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, type Ref } from 'vue';
-
+import { onMounted, ref } from 'vue';
+import io from 'socket.io-client';
 
 const brushColor = ref('#000000');
 const brushWidth = ref(7)
@@ -9,7 +9,11 @@ let mousePressed = false;
 let lastX: number, lastY: number;
 let canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D;
 
-function initBoard() {
+let timeout: ReturnType<typeof setTimeout>;
+
+const socket = io('http://localhost:3000');
+
+let initBoard = () => {
   canvas = document.getElementById('board') as HTMLCanvasElement;
   ctx = canvas.getContext('2d')!;
 
@@ -43,6 +47,7 @@ function initBoard() {
       push();
     }
   });
+
   // drawImage();
   push();
 }
@@ -56,7 +61,7 @@ function initBoard() {
 //     }); 
 // }
 
-function draw(x: number, y: number, isDown: boolean) {
+let draw = (x: number, y: number, isDown: boolean) => {
   if (isDown) {
     ctx.beginPath();
     ctx.strokeStyle = brushColor.value;
@@ -66,48 +71,65 @@ function draw(x: number, y: number, isDown: boolean) {
     ctx.lineTo(x, y);
     ctx.closePath();
     ctx.stroke();
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      let base64ImageData = canvas.toDataURL("image/png");
+      socket.emit("canvas-data", base64ImageData);
+    }, 1000);
   }
   lastX = x; lastY = y;
 }
 
-function clear() {
+let clear = () => {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  // push();
 }
 
 let cPushArray = new Array();
 let cStep = -1;
 
-function push() {
+let push = () => {
   cStep++;
   if (cStep < cPushArray.length) { cPushArray.length = cStep; }
   cPushArray.push(canvas.toDataURL());
 }
 
-function undo() {
+let undo = () => {
   if (cStep > 0) {
     cStep--;
     let canvasPic = new Image();
     canvasPic.src = cPushArray[cStep];
     canvasPic.onload = function () {
-      clear(); 
-      ctx.drawImage(canvasPic, 0, 0); 
+      clear();
+      ctx.drawImage(canvasPic, 0, 0);
     }
   }
 }
 
-function redo() {
+let redo = () => {
   if (cStep < cPushArray.length - 1) {
     cStep++;
     let canvasPic = new Image();
-    canvasPic.onload = function () { 
-      clear(); 
-      ctx.drawImage(canvasPic, 0, 0); 
+    canvasPic.onload = function () {
+      clear();
+      ctx.drawImage(canvasPic, 0, 0);
     }
     canvasPic.src = cPushArray[cStep];
   }
 
 }
+
+// receive canvas data from server
+socket.on("canvas-data", (data: string) => {
+  let canvasPic = new Image();
+  canvasPic.onload = function () {
+    clear();
+    ctx.drawImage(canvasPic, 0, 0);
+  }
+  canvasPic.src = data;
+})
+
 
 onMounted(() => {
   initBoard();
