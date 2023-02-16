@@ -13,7 +13,7 @@ let timeout: ReturnType<typeof setTimeout>;
 
 const socket = io('http://localhost:3000');
 
-let initBoard = () => {
+const initBoard = () => {
   canvas = document.getElementById('board') as HTMLCanvasElement;
   ctx = canvas.getContext('2d')!;
 
@@ -61,7 +61,7 @@ let initBoard = () => {
 //     }); 
 // }
 
-let draw = (x: number, y: number, isDown: boolean) => {
+const draw = (x: number, y: number, isDown: boolean) => {
   if (isDown) {
     ctx.beginPath();
     ctx.strokeStyle = brushColor.value;
@@ -75,44 +75,54 @@ let draw = (x: number, y: number, isDown: boolean) => {
     timeout = setTimeout(() => {
       let base64ImageData = canvas.toDataURL("image/png");
       socket.emit("canvas-data", base64ImageData);
-    }, 1000);
+    }, 10);
   }
   lastX = x; lastY = y;
 }
 
-let clear = () => {
+const clear = () => {
+  clearCanvas();
+  socket.emit("canvas-data", canvas.toDataURL("image/png"));
+}
+
+const clearCanvas = () => {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  // push();
 }
 
 let cPushArray = new Array();
 let cStep = -1;
 
-let push = () => {
+const push = () => {
   cStep++;
   if (cStep < cPushArray.length) { cPushArray.length = cStep; }
   cPushArray.push(canvas.toDataURL());
 }
 
-let undo = () => {
+/*
+ * Undo the last action
+ */
+const undo = () => {
   if (cStep > 0) {
     cStep--;
     let canvasPic = new Image();
     canvasPic.src = cPushArray[cStep];
     canvasPic.onload = function () {
-      clear();
+      clearCanvas();
       ctx.drawImage(canvasPic, 0, 0);
     }
   }
 }
 
-let redo = () => {
+/*
+ * Redo the last action
+ */
+const redo = () => {
   if (cStep < cPushArray.length - 1) {
     cStep++;
     let canvasPic = new Image();
     canvasPic.onload = function () {
-      clear();
+      clearCanvas();
       ctx.drawImage(canvasPic, 0, 0);
     }
     canvasPic.src = cPushArray[cStep];
@@ -124,7 +134,8 @@ let redo = () => {
 socket.on("canvas-data", (data: string) => {
   let canvasPic = new Image();
   canvasPic.onload = function () {
-    clear();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.drawImage(canvasPic, 0, 0);
   }
   canvasPic.src = data;
@@ -153,7 +164,7 @@ onMounted(() => {
     <div class="sketch" id="sketch">
       <canvas class="board" id="board"></canvas>
     </div>
-  </div>
+</div>
 </template>
 
 <style scoped>
