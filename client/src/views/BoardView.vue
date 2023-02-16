@@ -1,4 +1,20 @@
 <script setup lang="ts">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { onMounted, ref } from 'vue';
 import io from 'socket.io-client';
 
@@ -73,16 +89,15 @@ const draw = (x: number, y: number, isDown: boolean) => {
     ctx.stroke();
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(() => {
-      let base64ImageData = canvas.toDataURL("image/png");
-      socket.emit("canvas-data", base64ImageData);
-    }, 10);
+      emit();
+    }, 100);
   }
   lastX = x; lastY = y;
 }
 
 const clear = () => {
   clearCanvas();
-  socket.emit("canvas-data", canvas.toDataURL("image/png"));
+  emit();
 }
 
 const clearCanvas = () => {
@@ -102,32 +117,45 @@ const push = () => {
 /*
  * Undo the last action
  */
-const undo = () => {
-  if (cStep > 0) {
-    cStep--;
-    let canvasPic = new Image();
-    canvasPic.src = cPushArray[cStep];
-    canvasPic.onload = function () {
-      clearCanvas();
-      ctx.drawImage(canvasPic, 0, 0);
-    }
-  }
-}
+// const undo = () => {
+//   if (cStep > 0) {
+//     cStep--;
+//     let canvasPic = new Image();
+//     canvasPic.src = cPushArray[cStep];
+//     canvasPic.onload = function () {
+//       clearCanvas();
+//       ctx.drawImage(canvasPic, 0, 0);
+//     }
+//   }
+// }
 
-/*
- * Redo the last action
- */
-const redo = () => {
-  if (cStep < cPushArray.length - 1) {
-    cStep++;
-    let canvasPic = new Image();
-    canvasPic.onload = function () {
-      clearCanvas();
-      ctx.drawImage(canvasPic, 0, 0);
-    }
-    canvasPic.src = cPushArray[cStep];
-  }
+// /*
+//  * Redo the last action
+//  */
+// const redo = () => {
+//   if (cStep < cPushArray.length - 1) {
+//     cStep++;
+//     let canvasPic = new Image();
+//     canvasPic.onload = function () {
+//       clearCanvas();
+//       ctx.drawImage(canvasPic, 0, 0);
+//     }
+//     canvasPic.src = cPushArray[cStep];
+//   }
 
+// }
+
+const handleImage = (e: Event) => {
+  let reader = new FileReader();
+  reader.onload = function (event) {
+    let img = new Image();
+    img.onload = function () {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    }
+    img.src = event.target!.result as string;
+    emit();
+  }
+  reader.readAsDataURL((e.target as HTMLInputElement).files![0]);
 }
 
 // receive canvas data from server
@@ -141,6 +169,9 @@ socket.on("canvas-data", (data: string) => {
   canvasPic.src = data;
 })
 
+const emit = (canvasData: string = canvas.toDataURL("image/png")) => {
+  socket.emit("canvas-data", canvasData);
+}
 
 onMounted(() => {
   initBoard();
@@ -154,8 +185,9 @@ onMounted(() => {
       <input v-model="brushColor" type="color">
       <div id="button-container">
         <button @click="clear">Clear</button>
-        <button @click="undo">Undo</button>
-        <button @click="redo">Redo</button>
+        <input type="file" id="bg-image-input" accept="image/*" @change="handleImage">
+        <!-- <button @click="undo">Undo</button>
+                                        <button @click="redo">Redo</button> -->
       </div>
       <div id="slider-container">
         <input type="range" min="3" max="11" v-model.number="brushWidth" class="slider" id="myRange">
