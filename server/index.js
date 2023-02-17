@@ -10,6 +10,7 @@ const io = require("socket.io")(http, {
 // when user connects via websockets
 io.on("connection", (socket) => {
   console.log("a user connected");
+  socket.broadcast.emit("user-connected");
 
   // when server receives canvas data, broadcast it to all connected users
   socket.on("canvas-data", (data) => {
